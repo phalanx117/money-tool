@@ -10,6 +10,7 @@
             --accent: #2980b9;
             --success: #27ae60;
             --danger: #c0392b;
+            --warning: #f39c12;
             --bg: #f0f2f5;
             --card: #ffffff;
             --text-sub: #7f8c8d;
@@ -73,15 +74,20 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            border: 2px solid #eee; /* ボーダー少し太く */
-            transition: background-color 0.2s, opacity 0.2s;
+            border: 2px solid #eee;
+            transition: all 0.2s;
+            position: relative;
         }
 
-        /* 無効化（チェック外した）時のスタイル */
         .card.disabled {
             background-color: #f9f9f9;
             opacity: 0.6;
             border-color: #eee;
+        }
+
+        .card.locked {
+            border: 2px solid var(--warning);
+            background-color: #fffcf5;
         }
 
         /* カード上段 */
@@ -92,14 +98,30 @@
             padding-bottom: 8px;
         }
         
-        /* 左側：チェックボックスと名前 */
-        .card-info { display: flex; align-items: center; gap: 10px; }
+        .card-info { display: flex; align-items: center; gap: 8px; }
         
-        /* チェックボックスのスタイル */
         .chk-input {
-            width: 24px; height: 24px;
+            width: 20px; height: 20px;
             accent-color: var(--accent);
             cursor: pointer;
+        }
+        /* ロック中はチェックボックスも薄くする */
+        .chk-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ロックボタン */
+        .btn-lock {
+            background: white; border: 1px solid #ccc;
+            border-radius: 4px; padding: 4px 8px;
+            font-size: 0.75rem; color: #aaa; cursor: pointer;
+            display: flex; align-items: center; gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-lock.active {
+            background: var(--warning); border-color: var(--warning); color: white;
+            font-weight: bold; box-shadow: 0 2px 5px rgba(243, 156, 18, 0.3);
         }
 
         .denom-name { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
@@ -206,12 +228,12 @@
 
     <div class="footer">
         <button class="main-btn reset-all" onclick="resetAll()">全リセット</button>
-        <button class="main-btn" onclick="autoFill()">オート配分</button>
+        <button class="main-btn" onclick="autoFill()">残りを自動配分</button>
     </div>
 
     <div id="keypad" class="keypad-overlay">
         <div class="keypad-header">
-            <button class="close-keypad" onclick="closeKeypad()">完了 ⬇</button>
+            <button class="close-keypad" onclick="closeKeypad()">完了</button>
         </div>
         <div class="key-grid">
             <button class="key-btn" onclick="inputNum(7)">7</button>
@@ -243,8 +265,8 @@
 
     let targetAmount = 0;
     let counts = new Array(denominations.length).fill(0);
-    // チェック状態を管理（初期は全てON）
     let checks = new Array(denominations.length).fill(true);
+    let locks = new Array(denominations.length).fill(false); 
 
     function init() {
         const listArea = document.getElementById('list-area');
@@ -266,6 +288,10 @@
                         <input type="checkbox" class="chk-input" id="chk-${i}" checked onchange="toggleCheck(${i})">
                         <span class="denom-name">${d.name}</span>
                         <span class="denom-badge">${badgeText}</span>
+                        
+                        <button class="btn-lock" id="btn-lock-${i}" onclick="toggleLock(${i})">
+                            🔓 固定
+                        </button>
                     </div>
                     <div class="count-area">
                         <div id="disp-subtotal-${i}" class="subtotal-display">¥0</div>
@@ -287,14 +313,44 @@
         updateUI();
     }
 
-    // チェックボックスの切り替え処理
     function toggleCheck(index) {
         checks[index] = document.getElementById(`chk-${index}`).checked;
+        updateCardStyle(index);
+    }
+
+    function toggleLock(index) {
+        locks[index] = !locks[index];
+        const btn = document.getElementById(`btn-lock-${index}`);
+        const chk = document.getElementById(`chk-${index}`);
+        
+        if (locks[index]) {
+            // ロック時
+            btn.innerHTML = '🔒 固定中';
+            btn.classList.add('active');
+            
+            // チェックを強制ON & 無効化
+            checks[index] = true;
+            chk.checked = true;
+            chk.disabled = true;
+        } else {
+            // 解除時
+            btn.innerHTML = '🔓 固定';
+            btn.classList.remove('active');
+            
+            // チェックボックス有効化
+            chk.disabled = false;
+        }
+        updateCardStyle(index);
+    }
+
+    function updateCardStyle(index) {
         const card = document.getElementById(`card-${index}`);
         
-        if (checks[index]) {
-            card.classList.remove('disabled');
-        } else {
+        card.classList.remove('disabled', 'locked');
+
+        if (locks[index]) {
+            card.classList.add('locked');
+        } else if (!checks[index]) {
             card.classList.add('disabled');
         }
     }
@@ -315,35 +371,81 @@
 
     function resetAll() {
         counts.fill(0);
+        locks.fill(false); 
+        
+        locks.forEach((_, i) => {
+            const btn = document.getElementById(`btn-lock-${i}`);
+            btn.innerHTML = '🔓 固定';
+            btn.classList.remove('active');
+            
+            const chk = document.getElementById(`chk-${i}`);
+            chk.disabled = false;
+            
+            updateCardStyle(i);
+        });
+        
         updateUI();
     }
 
     function autoFill() {
         if (targetAmount === 0) return;
-        let rem = targetAmount;
-        const newCounts = new Array(denominations.length).fill(0);
 
-        denominations.forEach((d, i) => {
-            // チェックが入っていない金種はスキップ！
-            if (!checks[i]) return;
+        let fixedTotal = 0;
+        let remaining = targetAmount;
+        
+        for (let i = 0; i < denominations.length; i++) {
+            if (locks[i]) {
+                fixedTotal += counts[i] * denominations[i].val;
+            }
+        }
+        
+        remaining -= fixedTotal;
+
+        if (remaining < 0) {
+            alert("固定した金額が目標金額を超えています！");
+            return;
+        }
+
+        const newCounts = [...counts];
+
+        for (let i = 0; i < denominations.length; i++) {
+            if (locks[i]) continue;
+            if (!checks[i]) {
+                newCounts[i] = 0; 
+                continue;
+            }
+
+            const d = denominations[i];
+
+            let reserveAmount = 0;
+            for (let j = i + 1; j < denominations.length; j++) {
+                if (!locks[j] && checks[j]) {
+                    const d_next = denominations[j];
+                    if (d_next.type === 'coin') {
+                        reserveAmount += d_next.val * 50;
+                    } else {
+                        reserveAmount += d_next.val * 10;
+                    }
+                }
+            }
+
+            let availableForThis = remaining - reserveAmount;
+            if (availableForThis < 0) availableForThis = 0;
 
             if (d.type === 'bill') {
-                const cnt = Math.floor(rem / d.val);
-                newCounts[i] = cnt;
-                rem -= cnt * d.val;
+                let count = Math.floor(availableForThis / d.val);
+                newCounts[i] = count;
+                remaining -= count * d.val;
             } else {
-                const rollVal = d.val * 50;
-                const rollCnt = Math.floor(rem / rollVal);
-                newCounts[i] = rollCnt * 50;
-                rem -= (rollCnt * 50) * d.val;
+                let rollVal = d.val * 50;
+                let rollCount = Math.floor(availableForThis / rollVal);
+                let count = rollCount * 50;
+                newCounts[i] = count;
+                remaining -= count * d.val;
             }
-        });
+        }
         
-        // オート配分時は既存の入力を上書き（チェックされているものだけ）
-        // チェック外したものは0にせず、現在の値を保持するか、0にするか？
-        // ここでは「計算結果」を反映するので、計算に含まれなかったものは0になります。
         counts = newCounts; 
-        
         updateUI();
     }
 
