@@ -10,7 +10,7 @@
             --accent: #2980b9;
             --success: #27ae60;
             --danger: #c0392b;
-            --warning: #f39c12; /* 固定ボタンの色 */
+            --warning: #f39c12;
             --bg: #f0f2f5;
             --card: #ffffff;
             --text-sub: #7f8c8d;
@@ -88,21 +88,20 @@
 
         .card.locked {
             border: 2px solid var(--warning);
-            background-color: #fffcf5; /* 薄いオレンジ背景 */
+            background-color: #fffcf5;
         }
 
         /* カード上段 */
         .card-top {
-            display: flex; justify-content: space-between; align-items: flex-start; /* 上揃えに変更 */
+            display: flex; justify-content: space-between; align-items: flex-start;
             margin-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
             padding-bottom: 8px;
         }
         
-        /* 左側エリア */
         .card-info { 
             display: flex; 
-            flex-direction: column; /* 縦並びに変更してボタンのスペース確保 */
+            flex-direction: column;
             gap: 5px; 
         }
 
@@ -111,7 +110,7 @@
         }
         
         .chk-input {
-            width: 24px; height: 24px; /* 少し大きく */
+            width: 24px; height: 24px;
             accent-color: var(--accent);
             cursor: pointer;
         }
@@ -120,12 +119,11 @@
             cursor: not-allowed;
         }
 
-        /* 【改善】ロックボタンのデザイン */
         .btn-lock {
             background: #f8f9fa; 
             border: 1px solid #ccc;
-            border-bottom: 3px solid #ccc; /* 下線を太くして立体感 */
-            border-radius: 20px; /* 角丸を強く */
+            border-bottom: 3px solid #ccc;
+            border-radius: 20px;
             padding: 6px 12px;
             font-size: 0.8rem; 
             color: #555; 
@@ -135,21 +133,19 @@
             align-items: center; 
             gap: 6px;
             transition: all 0.1s;
-            margin-top: 5px; /* 名前との隙間 */
+            margin-top: 5px;
             width: fit-content;
         }
         
-        /* 押した時の凹みアニメーション */
         .btn-lock:active {
             transform: translateY(2px);
             border-bottom-width: 1px;
             margin-top: 7px;
         }
 
-        /* ロック中（アクティブ）のデザイン */
         .btn-lock.active {
             background: var(--warning); 
-            border-color: #d35400; /* 濃いオレンジ枠 */
+            border-color: #d35400;
             border-bottom-color: #d35400;
             color: white;
             box-shadow: 0 2px 5px rgba(243, 156, 18, 0.4);
@@ -182,7 +178,7 @@
 
         .ctrl-btn {
             border: none; border-radius: 8px;
-            padding: 12px 0; /* 少し縦長に */
+            padding: 12px 0;
             font-weight: bold; font-size: 0.95rem;
             cursor: pointer; position: relative;
             box-shadow: 0 2px 0 rgba(0,0,0,0.1);
@@ -229,8 +225,33 @@
         }
         .keypad-overlay.show { transform: translateY(0); }
         
-        .keypad-header { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-        .close-keypad { background:none; border:none; color:var(--accent); font-weight:bold; font-size:1rem; padding: 5px;}
+        /* キーパッドヘッダー：ACボタンと完了ボタンを左右に配置 */
+        .keypad-header { 
+            display: flex; 
+            justify-content: space-between; /* 左右配置 */
+            align-items: center;
+            margin-bottom: 10px; 
+        }
+        
+        .close-keypad { 
+            background: none; border: none; color: var(--accent); 
+            font-weight: bold; font-size: 1rem; padding: 5px; 
+            cursor: pointer;
+        }
+        
+        /* 新設：ACボタン */
+        .key-ac {
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 8px 16px; 
+            font-weight: bold; 
+            font-size: 1rem; 
+            box-shadow: 0 2px 0 #c0392b;
+            cursor: pointer;
+        }
+        .key-ac:active { transform: translateY(2px); box-shadow: none; }
 
         .key-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 400px; margin: 0 auto; }
         .key-btn { background: #fff; border:none; border-radius: 12px; padding: 15px; font-size: 1.5rem; font-weight:bold; box-shadow: 0 3px 0 #ccc; }
@@ -242,7 +263,7 @@
     <div class="header-panel">
         <div class="target-wrapper">
             <div>
-                <div class="target-label">両替したい金額</div>
+                <div class="target-label">両替金額</div>
                 <div id="target-val" class="target-val" onclick="openKeypad()">0</div>
             </div>
             <div style="text-align:right;">
@@ -265,8 +286,8 @@
 
     <div id="keypad" class="keypad-overlay">
         <div class="keypad-header">
-            <button class="close-keypad" onclick="closeKeypad()">完了</button>
             <button class="key-ac" onclick="inputNum('clear')">AC</button>
+            <button class="close-keypad" onclick="closeKeypad()">完了</button>
         </div>
         <div class="key-grid">
             <button class="key-btn" onclick="inputNum(7)">7</button>
@@ -359,14 +380,12 @@
         const chk = document.getElementById(`chk-${index}`);
         
         if (locks[index]) {
-            // ロック時
             btn.innerHTML = '🔒 固定中';
             btn.classList.add('active');
             checks[index] = true;
             chk.checked = true;
             chk.disabled = true;
         } else {
-            // 解除時
             btn.innerHTML = '🔓 数量を固定する';
             btn.classList.remove('active');
             chk.disabled = false;
@@ -544,6 +563,8 @@
         if (val === 'del') {
             s = s.slice(0, -1);
             if (s === "") s = "0";
+        } else if (val === 'clear') {
+            s = "0"; // ACボタン処理
         } else if (val === '00') {
             if (s !== "" && s !== "0") s += "00";
         } else {
