@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>両替計算ツール</title>
+    
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <meta name="theme-color" content="#2c3e50">
     <style>
         :root {
             --primary: #2c3e50;
@@ -306,6 +310,17 @@
     </div>
 
 <script>
+    // --- Service Workerの登録処理（ここに追加） ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('./sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful');
+            }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+        });
+    }
+
     const denominations = [
         { val: 5000, type: 'bill', name: '5,000円' },
         { val: 1000, type: 'bill', name: '1,000円' },
