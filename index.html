@@ -10,10 +10,11 @@
             --accent: #2980b9;
             --success: #27ae60;
             --danger: #c0392b;
-            --warning: #f39c12;
+            --warning: #f39c12; /* 固定ボタンの色 */
             --bg: #f0f2f5;
             --card: #ffffff;
             --text-sub: #7f8c8d;
+            --footer-height: 80px;
         }
 
         * { box-sizing: border-box; touch-action: manipulation; user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -24,7 +25,6 @@
             color: #333;
             margin: 0;
             padding: 0;
-            /* 100vhだとアドレスバー分ずれることがあるのでdvh(ダイナミック)を使う */
             height: 100vh;
             height: 100dvh; 
             overflow: hidden; 
@@ -66,8 +66,6 @@
             -webkit-overflow-scrolling: touch;
             padding: 15px;
             padding-top: 170px; 
-            
-            /* 【修正】ここをガッツリ増やしました（120px -> 300px） */
             padding-bottom: 300px; 
         }
 
@@ -90,21 +88,30 @@
 
         .card.locked {
             border: 2px solid var(--warning);
-            background-color: #fffcf5;
+            background-color: #fffcf5; /* 薄いオレンジ背景 */
         }
 
         /* カード上段 */
         .card-top {
-            display: flex; justify-content: space-between; align-items: center;
+            display: flex; justify-content: space-between; align-items: flex-start; /* 上揃えに変更 */
             margin-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
             padding-bottom: 8px;
         }
         
-        .card-info { display: flex; align-items: center; gap: 8px; }
+        /* 左側エリア */
+        .card-info { 
+            display: flex; 
+            flex-direction: column; /* 縦並びに変更してボタンのスペース確保 */
+            gap: 5px; 
+        }
+
+        .info-row {
+            display: flex; align-items: center; gap: 8px;
+        }
         
         .chk-input {
-            width: 20px; height: 20px;
+            width: 24px; height: 24px; /* 少し大きく */
             accent-color: var(--accent);
             cursor: pointer;
         }
@@ -113,26 +120,48 @@
             cursor: not-allowed;
         }
 
-        /* ロックボタン */
+        /* 【改善】ロックボタンのデザイン */
         .btn-lock {
-            background: white; border: 1px solid #ccc;
-            border-radius: 4px; padding: 4px 8px;
-            font-size: 0.75rem; color: #aaa; cursor: pointer;
-            display: flex; align-items: center; gap: 4px;
-            transition: all 0.2s;
+            background: #f8f9fa; 
+            border: 1px solid #ccc;
+            border-bottom: 3px solid #ccc; /* 下線を太くして立体感 */
+            border-radius: 20px; /* 角丸を強く */
+            padding: 6px 12px;
+            font-size: 0.8rem; 
+            color: #555; 
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px;
+            transition: all 0.1s;
+            margin-top: 5px; /* 名前との隙間 */
+            width: fit-content;
         }
-        .btn-lock.active {
-            background: var(--warning); border-color: var(--warning); color: white;
-            font-weight: bold; box-shadow: 0 2px 5px rgba(243, 156, 18, 0.3);
+        
+        /* 押した時の凹みアニメーション */
+        .btn-lock:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+            margin-top: 7px;
         }
 
-        .denom-name { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+        /* ロック中（アクティブ）のデザイン */
+        .btn-lock.active {
+            background: var(--warning); 
+            border-color: #d35400; /* 濃いオレンジ枠 */
+            border-bottom-color: #d35400;
+            color: white;
+            box-shadow: 0 2px 5px rgba(243, 156, 18, 0.4);
+        }
+
+        .denom-name { font-size: 1.3rem; font-weight: bold; color: var(--primary); }
         .denom-badge { 
             font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; 
             border: 1px solid #ccc; background: #f9f9f9; color: #666;
         }
         
-        .count-area { text-align: right; }
+        .count-area { text-align: right; margin-top: 5px;}
         
         .subtotal-display {
             font-size: 1rem; font-weight: bold; color: var(--accent);
@@ -140,9 +169,9 @@
         }
 
         .current-count {
-            font-size: 1.4rem; font-weight: bold; color: var(--primary);
+            font-size: 1.5rem; font-weight: bold; color: var(--primary);
         }
-        .current-unit { font-size: 0.8rem; color: var(--text-sub); margin-left: 2px; }
+        .current-unit { font-size: 0.85rem; color: var(--text-sub); margin-left: 2px; }
 
         /* カード下段：ボタン */
         .btn-row {
@@ -153,7 +182,8 @@
 
         .ctrl-btn {
             border: none; border-radius: 8px;
-            padding: 10px 0; font-weight: bold; font-size: 0.9rem;
+            padding: 12px 0; /* 少し縦長に */
+            font-weight: bold; font-size: 0.95rem;
             cursor: pointer; position: relative;
             box-shadow: 0 2px 0 rgba(0,0,0,0.1);
             transition: transform 0.1s;
@@ -230,12 +260,13 @@
 
     <div class="footer">
         <button class="main-btn reset-all" onclick="resetAll()">全リセット</button>
-        <button class="main-btn" onclick="autoFill()">残りをオート配分</button>
+        <button class="main-btn" onclick="autoFill()">残額を自動配分</button>
     </div>
 
     <div id="keypad" class="keypad-overlay">
         <div class="keypad-header">
-            <button class="close-keypad" onclick="closeKeypad()">完了 ⬇</button>
+            <button class="close-keypad" onclick="closeKeypad()">完了</button>
+            <button class="key-ac" onclick="inputNum('clear')">AC</button>
         </div>
         <div class="key-grid">
             <button class="key-btn" onclick="inputNum(7)">7</button>
@@ -287,12 +318,14 @@
             card.innerHTML = `
                 <div class="card-top">
                     <div class="card-info">
-                        <input type="checkbox" class="chk-input" id="chk-${i}" checked onchange="toggleCheck(${i})">
-                        <span class="denom-name">${d.name}</span>
-                        <span class="denom-badge">${badgeText}</span>
+                        <div class="info-row">
+                            <input type="checkbox" class="chk-input" id="chk-${i}" checked onchange="toggleCheck(${i})">
+                            <span class="denom-name">${d.name}</span>
+                            <span class="denom-badge">${badgeText}</span>
+                        </div>
                         
                         <button class="btn-lock" id="btn-lock-${i}" onclick="toggleLock(${i})">
-                            🔓 固定
+                            🔓 数量を固定する
                         </button>
                     </div>
                     <div class="count-area">
@@ -326,13 +359,15 @@
         const chk = document.getElementById(`chk-${index}`);
         
         if (locks[index]) {
+            // ロック時
             btn.innerHTML = '🔒 固定中';
             btn.classList.add('active');
             checks[index] = true;
             chk.checked = true;
             chk.disabled = true;
         } else {
-            btn.innerHTML = '🔓 固定';
+            // 解除時
+            btn.innerHTML = '🔓 数量を固定する';
             btn.classList.remove('active');
             chk.disabled = false;
         }
@@ -370,7 +405,7 @@
         
         locks.forEach((_, i) => {
             const btn = document.getElementById(`btn-lock-${i}`);
-            btn.innerHTML = '🔓 固定';
+            btn.innerHTML = '🔓 数量を固定する';
             btn.classList.remove('active');
             
             const chk = document.getElementById(`chk-${i}`);
